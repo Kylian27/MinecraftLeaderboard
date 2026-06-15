@@ -1,0 +1,25 @@
+<div class="minecraft-wrapper">
+  <div class="minecraft-container">
+    <h1 class="minecraft-title">Top Miners</h1>
+    
+    <table class="minecraft-table">
+      <thead>
+        <tr>
+          <th class="col-rank">Rank</th>
+          <th class="col-player">Player</th>
+          <th class="col-score">Blocks Mined</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let player of players">
+          <td class="rank-text">#{{ player.rank }}</td>
+          <td class="player-info">
+            <img [src]="'https://minotar.net/helm/' + player.username + '/32.png'" alt="Avatar" class="avatar">
+            {{ player.username }}
+          </td>
+          <td class="score-text">{{ player.blocksBroken | number }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
