@@ -118,3 +118,17 @@ resource "aws_route_table_association" "private_2" {
   subnet_id      = aws_subnet.private_2.id
   route_table_id = aws_route_table.private_rt.id
 }
+
+# La règle d'Auto Scaling (Target Tracking)
+resource "aws_autoscaling_policy" "cpu_policy" {
+  name                   = "minecraft-cpu-policy"
+  autoscaling_group_name = aws_autoscaling_group.flask_asg.name
+  policy_type            = "TargetTrackingScaling"
+
+  target_tracking_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ASGAverageCPUUtilization"
+    }
+    target_value = 50.0 # Seuil de déclenchement (50% de CPU)
+  }
+}
