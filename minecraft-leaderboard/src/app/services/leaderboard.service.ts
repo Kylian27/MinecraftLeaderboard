@@ -13,7 +13,7 @@ export interface Player {
 })
 export class LeaderboardService {
   // L'URL de ton API Flask locale
-  private apiUrl = 'http://localhost:5000/api/leaderboard';
+  private apiUrl = 'http://minecraft-alb-2139979520.us-east-1.elb.amazonaws.com/api/leaderboard';
 
   constructor(private http: HttpClient) { }
 
