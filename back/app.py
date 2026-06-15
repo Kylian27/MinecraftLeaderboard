@@ -1,60 +1,66 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
-import sqlite3
+import pymysql
 import random
 
 app = Flask(__name__)
-# Autorise les requêtes cross-origin pour Angular
 CORS(app)
 
-DB_FILE = 'minecraft.db'
+# Tes identifiants AWS RDS
+DB_HOST = "minecraft-leaderboard-db.cneumy42uqme.us-east-1.rds.amazonaws.com"
+DB_USER = "admin"
+DB_PASSWORD = "MinecraftAdmin123!"
+
+def get_connection():
+    """Crée une connexion à l'instance RDS."""
+    return pymysql.connect(
+        host=DB_HOST, user=DB_USER, password=DB_PASSWORD, autocommit=True
+    )
 
 def init_db():
-    """Initialise la base de données avec des fausses données si elle est vide."""
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    
-    # Création de la table (schéma très proche de ce que tu auras sur RDS)
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS players (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL,
-            blocks_broken INTEGER NOT NULL
-        )
-    ''')
-    
-    # Vérifie si la table est vide
-    cursor.execute('SELECT COUNT(*) FROM players')
-    if cursor.fetchone()[0] == 0:
-        print("Génération des données de test...")
-        mock_players = ['Notch', 'Jeb_', 'Herobrine', 'Steve', 'Alex', 'CaptainSparklez', 'DanTDM', 'Munchjin', 'BasilicEsp7', 'Pipepsycho']
-        for player in mock_players:
-            score = random.randint(1000, 50000)
-            cursor.execute('INSERT INTO players (username, blocks_broken) VALUES (?, ?)', (player, score))
-        conn.commit()
+    """Initialise la base de données et la table sur RDS."""
+    conn = get_connection()
+    with conn.cursor() as cursor:
+        # Création de la base de données interne si elle n'existe pas
+        cursor.execute("CREATE DATABASE IF NOT EXISTS minecraft_db")
+        cursor.execute("USE minecraft_db")
         
+        # Création de la table avec la syntaxe MySQL
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS players (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(255) NOT NULL,
+                blocks_broken INT NOT NULL
+            )
+        ''')
+        
+        # Injection des fausses données si la table est vide
+        cursor.execute('SELECT COUNT(*) FROM players')
+        if cursor.fetchone()[0] == 0:
+            mock_players = ['Notch', 'Jeb_', 'Herobrine', 'Steve', 'Alex', 'CaptainSparklez', 'DanTDM']
+            for player in mock_players:
+                score = random.randint(1000, 50000)
+                cursor.execute('INSERT INTO players (username, blocks_broken) VALUES (%s, %s)', (player, score))
     conn.close()
 
 @app.route('/api/leaderboard', methods=['GET'])
 def get_leaderboard():
-    """Route REST pour récupérer le top 10 des joueurs."""
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    
-    # Récupère les joueurs triés par blocs cassés
-    cursor.execute('SELECT username, blocks_broken FROM players ORDER BY blocks_broken DESC LIMIT 10')
-    rows = cursor.fetchall()
+    """Route REST pour Angular."""
+    conn = get_connection()
+    with conn.cursor() as cursor:
+        cursor.execute("USE minecraft_db")
+        cursor.execute('SELECT username, blocks_broken FROM players ORDER BY blocks_broken DESC LIMIT 10')
+        rows = cursor.fetchall()
     conn.close()
     
-    # Formatage en JSON pour Angular
+    # Formatage JSON pour Angular
     leaderboard = [
         {"rank": index + 1, "username": row[0], "blocksBroken": row[1]} 
         for index, row in enumerate(rows)
     ]
-    
     return jsonify(leaderboard)
 
 if __name__ == '__main__':
     init_db()
-    # Lancement du serveur sur le port 5000
-    app.run(debug=True, port=5000)
+    # Le host='0.0.0.0' est obligatoire pour que Flask écoute les requêtes de l'extérieur (le Load Balancer)
+    app.run(host='0.0.0.0', port=5000)
