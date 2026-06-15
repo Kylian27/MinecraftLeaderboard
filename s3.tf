@@ -1,7 +1,7 @@
 resource "aws_s3_bucket" "frontend" {
   # ATTENTION : Ce nom doit être globalement unique sur tout AWS. 
   # N'hésite pas à ajouter une suite de chiffres à la fin.
-  bucket = "minecraft-leaderboard-frontend-kln" 
+  bucket = "minecraft-leaderboard-frontend-kln"
 }
 
 resource "aws_s3_bucket_website_configuration" "frontend_website" {
