@@ -2,14 +2,18 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 import pymysql
 import random
+import dotenv
+import os
 
 app = Flask(__name__)
 CORS(app)
 
+dotenv.load_dotenv()
+
 # Tes identifiants AWS RDS
-DB_HOST = "minecraft-leaderboard-db.cneumy42uqme.us-east-1.rds.amazonaws.com"
-DB_USER = "admin"
-DB_PASSWORD = "MinecraftAdmin123!"
+DB_HOST = os.getenv("DB_HOST")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
 
 def get_connection():
     """Crée une connexion à l'instance RDS."""
