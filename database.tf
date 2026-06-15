@@ -1,4 +1,3 @@
-# 1. Le Groupe de Sous-réseaux (Pour dire à RDS où se placer)
 resource "aws_db_subnet_group" "minecraft_db_subnet" {
   name       = "minecraft-db-subnet-group"
   # On place la base de données UNIQUEMENT dans les sous-réseaux privés pour la sécurité
@@ -9,7 +8,6 @@ resource "aws_db_subnet_group" "minecraft_db_subnet" {
   }
 }
 
-# 2. Le Groupe de Sécurité (Le pare-feu de la base de données)
 resource "aws_security_group" "rds_sg" {
   name        = "minecraft-rds-security-group"
   description = "Autorise le trafic MySQL depuis le VPC"
@@ -35,7 +33,6 @@ resource "aws_security_group" "rds_sg" {
   }
 }
 
-# 3. L'Instance de Base de Données (MySQL)
 resource "aws_db_instance" "minecraft_db" {
   identifier           = "minecraft-leaderboard-db"
   allocated_storage    = 20
@@ -56,7 +53,6 @@ resource "aws_db_instance" "minecraft_db" {
   }
 }
 
-# 4. On demande à Terraform de nous afficher l'adresse de connexion à la fin
 output "rds_endpoint" {
   description = "L'adresse de connexion pour l'API Flask"
   value       = aws_db_instance.minecraft_db.endpoint

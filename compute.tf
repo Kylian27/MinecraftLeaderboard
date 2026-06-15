@@ -1,4 +1,3 @@
-# 1. Groupe de Sécurité pour le Load Balancer (Ouvert à tous sur Internet)
 resource "aws_security_group" "alb_sg" {
   name        = "minecraft-alb-sg"
   vpc_id      = aws_vpc.main.id
@@ -18,7 +17,6 @@ resource "aws_security_group" "alb_sg" {
   }
 }
 
-# 2. Groupe de Sécurité pour les serveurs EC2 (Accessibles UNIQUEMENT par l'ALB)
 resource "aws_security_group" "ec2_sg" {
   name        = "minecraft-ec2-sg"
   vpc_id      = aws_vpc.main.id
@@ -38,7 +36,6 @@ resource "aws_security_group" "ec2_sg" {
   }
 }
 
-# 3. Récupérer l'image Amazon Linux 2023 la plus récente
 data "aws_ami" "amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
@@ -48,7 +45,6 @@ data "aws_ami" "amazon_linux" {
   }
 }
 
-# 4. Le modèle de lancement (L'ADN de tes serveurs)
 resource "aws_launch_template" "flask_app" {
   name_prefix   = "minecraft-flask-app-"
   image_id      = data.aws_ami.amazon_linux.id
@@ -56,7 +52,6 @@ resource "aws_launch_template" "flask_app" {
 
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
 
-  # Le script exécuté au démarrage du serveur (Il installe Python et crée app.py)
   user_data = base64encode(<<-EOF
               #!/bin/bash
               dnf update -y
@@ -74,7 +69,6 @@ resource "aws_launch_template" "flask_app" {
   )
 }
 
-# 5. L'Application Load Balancer (ALB)
 resource "aws_lb" "main" {
   name               = "minecraft-alb"
   internal           = false
@@ -107,7 +101,6 @@ resource "aws_lb_listener" "front_end" {
   }
 }
 
-# 6. L'Auto Scaling Group (ASG)
 resource "aws_autoscaling_group" "flask_asg" {
   name                = "minecraft-asg"
   vpc_zone_identifier = [aws_subnet.private_1.id, aws_subnet.private_2.id]
@@ -123,7 +116,6 @@ resource "aws_autoscaling_group" "flask_asg" {
   }
 }
 
-# On affiche l'URL publique de l'API à la fin !
 output "api_url" {
   value = "http://${aws_lb.main.dns_name}/api/leaderboard"
 }
